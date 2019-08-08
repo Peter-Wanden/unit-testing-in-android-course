@@ -16,4 +16,12 @@ public class User {
     public String getUsername() {
         return mUsername;
     }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "mUserId='" + mUserId + '\'' +
+                ", mUsername='" + mUsername + '\'' +
+                '}';
+    }
 }

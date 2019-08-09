@@ -1,6 +1,5 @@
 package com.techyourchance.testdoublesfundamentals.exercise4;
 
-import com.techyourchance.testdoublesfundamentals.example4.networking.LoginHttpEndpointSync;
 import com.techyourchance.testdoublesfundamentals.example4.networking.NetworkErrorException;
 import com.techyourchance.testdoublesfundamentals.exercise4.networking.UserProfileHttpEndpointSync;
 import com.techyourchance.testdoublesfundamentals.exercise4.users.User;
@@ -12,7 +11,6 @@ import org.junit.Test;
 
 import java.util.LinkedHashMap;
 
-import static com.techyourchance.testdoublesfundamentals.example4.networking.LoginHttpEndpointSync.*;
 import static com.techyourchance.testdoublesfundamentals.exercise4.FetchUserProfileUseCaseSync.*;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -36,7 +34,6 @@ public class FetchUserProfileUseCaseSyncTestAlternative {
         SUT = new FetchUserProfileUseCaseSync(userProfileHttpEndpointSyncTd, usersCacheTd);
     }
 
-    // user id is passed to the endpoint
     @Test
     public void fetchUserProfileSync_success_userIdPassedToEndpoint() {
         // Arrange
@@ -46,7 +43,6 @@ public class FetchUserProfileUseCaseSyncTestAlternative {
         assertThat(userProfileHttpEndpointSyncTd.userId, is(USER_ID));
     }
 
-    // if endpoint success user is passed to user cache
     @Test
     public void fetchUserProfileSync_success_userPassedToUsersCache() {
         // Arrange
@@ -59,7 +55,6 @@ public class FetchUserProfileUseCaseSyncTestAlternative {
         assertThat(cachedUser.getImageUrl(), is(IMAGE_URL));
     }
 
-    // if endpoint fails user cache is not changed
     @Test
     public void fetchUserProfileSync_authError_userNotCached() {
         // Arrange
@@ -90,9 +85,6 @@ public class FetchUserProfileUseCaseSyncTestAlternative {
         assertThat(usersCacheTd.getUser(USER_ID), is(nullValue()));
     }
 
-
-    // SUT return results:
-    // if success, returnSuccess
     @Test
     public void fetchUserProfileSync_success_successReturned() {
         // Arrange
@@ -102,7 +94,6 @@ public class FetchUserProfileUseCaseSyncTestAlternative {
         assertThat(result, is(UseCaseResult.SUCCESS));
     }
 
-    // if failure, returnFailure
     @Test
     public void fetchUserProfileSync_authError_failureReturned() {
         // Arrange

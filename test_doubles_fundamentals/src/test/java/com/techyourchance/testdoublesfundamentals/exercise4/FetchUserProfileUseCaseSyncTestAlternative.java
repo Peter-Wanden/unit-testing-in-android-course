@@ -1,6 +1,6 @@
 package com.techyourchance.testdoublesfundamentals.exercise4;
 
-import com.techyourchance.testdoublesfundamentals.exercise4.FetchUserProfileUseCaseSync.UseCaseResult;
+import com.techyourchance.testdoublesfundamentals.example4.networking.LoginHttpEndpointSync;
 import com.techyourchance.testdoublesfundamentals.example4.networking.NetworkErrorException;
 import com.techyourchance.testdoublesfundamentals.exercise4.networking.UserProfileHttpEndpointSync;
 import com.techyourchance.testdoublesfundamentals.exercise4.users.User;
@@ -10,16 +10,17 @@ import org.jetbrains.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashMap;
 
+import static com.techyourchance.testdoublesfundamentals.example4.networking.LoginHttpEndpointSync.*;
+import static com.techyourchance.testdoublesfundamentals.exercise4.FetchUserProfileUseCaseSync.*;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
 
-public class FetchUserProfileUseCaseSyncTest {
+public class FetchUserProfileUseCaseSyncTestAlternative {
 
-    public static final String USER_ID = "userId";
+    public static final String USER_ID = "user_id";
     public static final String FULL_NAME = "full_name";
     public static final String IMAGE_URL = "image_url";
 
@@ -35,122 +36,156 @@ public class FetchUserProfileUseCaseSyncTest {
         SUT = new FetchUserProfileUseCaseSync(userProfileHttpEndpointSyncTd, usersCacheTd);
     }
 
+    // user id is passed to the endpoint
     @Test
-    public void fetchUserProfileSync_success_userIdPassedToEndpoint() throws Exception {
+    public void fetchUserProfileSync_success_userIdPassedToEndpoint() {
+        // Arrange
+        // Act
         SUT.fetchUserProfileSync(USER_ID);
+        // Assert
         assertThat(userProfileHttpEndpointSyncTd.userId, is(USER_ID));
     }
 
+    // if endpoint success user is passed to user cache
     @Test
-    public void fetchUserProfileSync_success_userCached() throws Exception {
+    public void fetchUserProfileSync_success_userPassedToUsersCache() {
+        // Arrange
+        // Act
         SUT.fetchUserProfileSync(USER_ID);
         User cachedUser = usersCacheTd.getUser(USER_ID);
+        // Assert
         assertThat(cachedUser.getUserId(), is(USER_ID));
         assertThat(cachedUser.getFullName(), is(FULL_NAME));
         assertThat(cachedUser.getImageUrl(), is(IMAGE_URL));
     }
 
+    // if endpoint fails user cache is not changed
     @Test
-    public void fetchUserProfileSync_generalError_userNotCached() throws Exception {
-        userProfileHttpEndpointSyncTd.isGeneralError = true;
-        SUT.fetchUserProfileSync(USER_ID);
-        assertThat(usersCacheTd.getUser(USER_ID), is(nullValue()));
-    }
-
-    @Test
-    public void fetchUserProfileSync_authError_userNotCached() throws Exception {
+    public void fetchUserProfileSync_authError_userNotCached() {
+        // Arrange
         userProfileHttpEndpointSyncTd.isAuthError = true;
+        // Act
         SUT.fetchUserProfileSync(USER_ID);
+        // Assert
         assertThat(usersCacheTd.getUser(USER_ID), is(nullValue()));
     }
 
     @Test
-    public void fetchUserProfileSync_serverError_userNotCached() throws Exception {
+    public void fetchUserProfileSync_serverError_userNotCached() {
+        // Arrange
         userProfileHttpEndpointSyncTd.isServerError = true;
+        // Act
         SUT.fetchUserProfileSync(USER_ID);
+        // Assert
         assertThat(usersCacheTd.getUser(USER_ID), is(nullValue()));
     }
 
     @Test
-    public void fetchUserProfileSync_success_successReturned() throws Exception {
+    public void fetchUserProfileSync_generalError_userNotCached() {
+        // Arrange
+        userProfileHttpEndpointSyncTd.isGeneralError = true;
+        // Act
+        SUT.fetchUserProfileSync(USER_ID);
+        // Assert
+        assertThat(usersCacheTd.getUser(USER_ID), is(nullValue()));
+    }
+
+
+    // SUT return results:
+    // if success, returnSuccess
+    @Test
+    public void fetchUserProfileSync_success_successReturned() {
+        // Arrange
+        // Act
         UseCaseResult result = SUT.fetchUserProfileSync(USER_ID);
+        // Assert
         assertThat(result, is(UseCaseResult.SUCCESS));
     }
 
+    // if failure, returnFailure
     @Test
-    public void fetchUserProfileSync_serverError_failureReturned() throws Exception {
-        userProfileHttpEndpointSyncTd.isServerError = true;
-        UseCaseResult result = SUT.fetchUserProfileSync(USER_ID);
-        assertThat(result, is(UseCaseResult.FAILURE));
-    }
-
-    @Test
-    public void fetchUserProfileSync_authError_failureReturned() throws Exception {
+    public void fetchUserProfileSync_authError_failureReturned() {
+        // Arrange
         userProfileHttpEndpointSyncTd.isAuthError = true;
+        // Act
         UseCaseResult result = SUT.fetchUserProfileSync(USER_ID);
+        // Assert
         assertThat(result, is(UseCaseResult.FAILURE));
     }
 
     @Test
-    public void fetchUserProfileSync_generalError_failureReturned() throws Exception {
+    public void fetchUserProfileSync_serverError_failureReturned() {
+        // Arrange
+        userProfileHttpEndpointSyncTd.isServerError = true;
+        // Act
+        UseCaseResult result = SUT.fetchUserProfileSync(USER_ID);
+        // Assert
+        assertThat(result, is(UseCaseResult.FAILURE));
+    }
+
+    @Test
+    public void fetchUserProfileSync_generalError_failureReturned() {
+        // Arrange
         userProfileHttpEndpointSyncTd.isGeneralError = true;
+        // Act
         UseCaseResult result = SUT.fetchUserProfileSync(USER_ID);
+        // Assert
         assertThat(result, is(UseCaseResult.FAILURE));
     }
 
+
+    // network error, network error returned
     @Test
-    public void fetchUserProfileSync_networkError_networkErrorReturned() throws Exception {
+    public void fetchUserProfileSync_NetworkError_networkErrorExceptionThrown() {
+        // Arrange
         userProfileHttpEndpointSyncTd.isNetworkError = true;
+        // Act
         UseCaseResult result = SUT.fetchUserProfileSync(USER_ID);
+        // Assert
         assertThat(result, is(UseCaseResult.NETWORK_ERROR));
     }
 
-
-
+    // Helper classes
     private static class UserProfileHttpEndpointSyncTd implements UserProfileHttpEndpointSync {
 
         String userId = "";
-        boolean isAuthError,
-                isServerError,
-                isGeneralError,
-                isNetworkError;
+        boolean isAuthError;
+        boolean isServerError;
+        boolean isGeneralError;
+        boolean isNetworkError;
 
         @Override
         public EndpointResult getUserProfile(String userId) throws NetworkErrorException {
             this.userId = userId;
-            if (isGeneralError) {
-                return new EndpointResult(EndpointResultStatus.GENERAL_ERROR, "", "", "");
-            } else if (isAuthError) {
+            if (isAuthError)
                 return new EndpointResult(EndpointResultStatus.AUTH_ERROR, "", "", "");
-            }  else if (isServerError) {
+            if (isServerError)
                 return new EndpointResult(EndpointResultStatus.SERVER_ERROR, "", "", "");
-            } else if (isNetworkError) {
+            if (isGeneralError)
+                return new EndpointResult(EndpointResultStatus.GENERAL_ERROR, "", "", "");
+            if (isNetworkError)
                 throw new NetworkErrorException();
-            } else {
-                return new EndpointResult(EndpointResultStatus.SUCCESS, USER_ID, FULL_NAME, IMAGE_URL);
-            }
+            else
+                return new EndpointResult(EndpointResultStatus.SUCCESS, userId, FULL_NAME, IMAGE_URL);
         }
     }
 
     private static class UsersCacheTd implements UsersCache {
 
-        private List<User> users = new ArrayList<>(1);
+        LinkedHashMap<String, User> users = new LinkedHashMap<>();
 
         @Override
         public void cacheUser(User user) {
-            User existingUser = getUser(user.getUserId());
-            if (existingUser != null)
-                users.remove(existingUser);
-            users.add(user);
+            users.put(user.getUserId(), user);
         }
 
         @Nullable
         @Override
         public User getUser(String userId) {
-            for (User user : users)
-                if (user.getUserId().equals(userId))
-                    return user;
-            return null;
+            if (users.containsKey(userId))
+                return users.get(userId);
+            else
+                return null;
         }
     }
 }

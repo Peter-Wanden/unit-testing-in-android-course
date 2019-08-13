@@ -58,12 +58,6 @@ public class FetchCartItemsUseCaseTest {
         success();
     }
 
-    private List<CartItemSchema> getCartItemSchemes() {
-        List<CartItemSchema> schemas = new ArrayList<>();
-        schemas.add(new CartItemSchema(ID, TITLE, DESCRIPTION, PRICE));
-        return schemas;
-    }
-
     @Test
     public void fetchCartItems_correctLimitPassedToEndpoint() throws Exception {
         // Arrange
@@ -133,12 +127,6 @@ public class FetchCartItemsUseCaseTest {
 
     // region helper methods -----------------------------------------------------------------------
 
-    private List<CartItem> getCartItems() {
-        List<CartItem> cartItems = new ArrayList<>();
-        cartItems.add(new CartItem(ID, TITLE, DESCRIPTION, PRICE));
-        return cartItems;
-    }
-
     private void success() {
         doAnswer(new Answer() {
             @Override
@@ -149,6 +137,18 @@ public class FetchCartItemsUseCaseTest {
                 return null;
             }
         }).when(mGetCartItemsHttpEndpointMock).getCartItems(anyInt(), any(Callback.class));
+    }
+
+    private List<CartItemSchema> getCartItemSchemes() {
+        List<CartItemSchema> schemas = new ArrayList<>();
+        schemas.add(new CartItemSchema(ID, TITLE, DESCRIPTION, PRICE));
+        return schemas;
+    }
+
+    private List<CartItem> getCartItems() {
+        List<CartItem> cartItems = new ArrayList<>();
+        cartItems.add(new CartItem(ID, TITLE, DESCRIPTION, PRICE));
+        return cartItems;
     }
 
     private void networkError() {

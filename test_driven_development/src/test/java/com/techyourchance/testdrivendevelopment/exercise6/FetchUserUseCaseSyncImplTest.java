@@ -1,6 +1,5 @@
 package com.techyourchance.testdrivendevelopment.exercise6;
 
-import com.techyourchance.testdrivendevelopment.exercise6.FetchUserUseCaseSync.UseCaseResult;
 import com.techyourchance.testdrivendevelopment.exercise6.networking.FetchUserHttpEndpointSync;
 import com.techyourchance.testdrivendevelopment.exercise6.networking.NetworkErrorException;
 import com.techyourchance.testdrivendevelopment.exercise6.users.User;
@@ -14,40 +13,33 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import static com.techyourchance.testdrivendevelopment.exercise6.FetchUserUseCaseSync.*;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.*;
+
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.mockito.ArgumentMatchers.*;
+import static org.hamcrest.core.IsNull.nullValue;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
-public class FetchUserUseCaseSyncTestRef {
+public class FetchUserUseCaseSyncImplTest {
 
-    // region constants ----------------------------------------------------------------------------
+    // region constants
+    public static final String USER_ID = "user_id";
+    public static final String USER_NAME = "user_name";
+    public static final User USER = new User(USER_ID, USER_NAME);
+    // endregion constants
 
-    private static final String USER_ID = "userId";
-    private static final String USERNAME = "username";
-    private static final User USER = new User(USER_ID, USERNAME);
+    // region helper fields
+    FetchUserHttpEndpointSyncTd fetchUserHttpEndpointSyncTd;
+    @Mock UsersCache usersCacheMock;
+    // endregion helper fields    
 
-    // endregion constants -------------------------------------------------------------------------
-
-
-    // region helper fields ------------------------------------------------------------------------
-
-    FetchUserHttpEndpointSyncTestDouble mFetchUserHttpEndpointSyncTestDouble;
-    @Mock UsersCache mUsersCacheMock;
-
-    // endregion helper fields ---------------------------------------------------------------------
-
-    private FetchUserUseCaseSync SUT;
+    FetchUserUseCaseSyncImpl SUT;
 
     @Before
     public void setup() throws Exception {
-        mFetchUserHttpEndpointSyncTestDouble = new FetchUserHttpEndpointSyncTestDouble();
-
-        // TODO: assign your implementation of FetchUserUseCaseSync to SUT
-        SUT = new FetchUserUseCaseSyncImpl(mFetchUserHttpEndpointSyncTestDouble, mUsersCacheMock);
-
+        fetchUserHttpEndpointSyncTd = new FetchUserHttpEndpointSyncTd();
+        SUT = new FetchUserUseCaseSyncImpl(fetchUserHttpEndpointSyncTd, usersCacheMock);
         userNotInCache();
         endpointSuccess();
     }
@@ -58,7 +50,7 @@ public class FetchUserUseCaseSyncTestRef {
         // Act
         SUT.fetchUserSync(USER_ID);
         // Assert
-        assertThat(mFetchUserHttpEndpointSyncTestDouble.mUserId, is(USER_ID));
+        assertThat(fetchUserHttpEndpointSyncTd.userId, is(USER_ID));
     }
 
     @Test
@@ -86,7 +78,7 @@ public class FetchUserUseCaseSyncTestRef {
         // Act
         SUT.fetchUserSync(USER_ID);
         // Assert
-        verify(mUsersCacheMock).cacheUser(ac.capture());
+        verify(usersCacheMock).cacheUser(ac.capture());
         assertThat(ac.getValue(), is(USER));
     }
 
@@ -107,7 +99,7 @@ public class FetchUserUseCaseSyncTestRef {
         // Act
         UseCaseResult result = SUT.fetchUserSync(USER_ID);
         // Assert
-        assertThat(result.getUser(), nullValue());
+        assertThat(result.getUser(), is(nullValue()));
     }
 
     @Test
@@ -117,7 +109,7 @@ public class FetchUserUseCaseSyncTestRef {
         // Act
         SUT.fetchUserSync(USER_ID);
         // Assert
-        verify(mUsersCacheMock, never()).cacheUser(any(User.class));
+        verify(usersCacheMock, never()).cacheUser(any(User.class));
     }
 
     @Test
@@ -147,7 +139,7 @@ public class FetchUserUseCaseSyncTestRef {
         // Act
         SUT.fetchUserSync(USER_ID);
         // Assert
-        verify(mUsersCacheMock, never()).cacheUser(any(User.class));
+        verify(usersCacheMock, never()).cacheUser(any(User.class));
     }
 
     @Test
@@ -177,7 +169,7 @@ public class FetchUserUseCaseSyncTestRef {
         // Act
         SUT.fetchUserSync(USER_ID);
         // Assert
-        verify(mUsersCacheMock, never()).cacheUser(any(User.class));
+        verify(usersCacheMock, never()).cacheUser(any(User.class));
     }
 
     @Test
@@ -187,12 +179,12 @@ public class FetchUserUseCaseSyncTestRef {
         // Act
         SUT.fetchUserSync(USER_ID);
         // Assert
-        verify(mUsersCacheMock).getUser(ac.capture());
+        verify(usersCacheMock).getUser(ac.capture());
         assertThat(ac.getValue(), is(USER_ID));
     }
 
     @Test
-    public void fetchUserSync_inCache_successStatus() throws Exception {
+    public void fetchUserSync_userCached_successStatus() throws Exception {
         // Arrange
         userInCache();
         // Act
@@ -202,7 +194,7 @@ public class FetchUserUseCaseSyncTestRef {
     }
 
     @Test
-    public void fetchUserSync_inCache_cachedUserReturned() throws Exception {
+    public void fetchUserSync_userCached_correctUserReturned() throws Exception {
         // Arrange
         userInCache();
         // Act
@@ -212,23 +204,18 @@ public class FetchUserUseCaseSyncTestRef {
     }
 
     @Test
-    public void fetchUserSync_inCache_endpointNotPolled() throws Exception {
+    public void fetchUserSync_userCached_endpointNotPolled() throws Exception {
         // Arrange
         userInCache();
         // Act
         SUT.fetchUserSync(USER_ID);
         // Assert
-        assertThat(mFetchUserHttpEndpointSyncTestDouble.mRequestCount, is(0));
+        assertThat(fetchUserHttpEndpointSyncTd.requestCount, is(0));
     }
 
-    // region helper methods -----------------------------------------------------------------------
-
+    // region for helper methods
     private void userNotInCache() {
-        when(mUsersCacheMock.getUser(anyString())).thenReturn(null);
-    }
-
-    private void userInCache() {
-        when(mUsersCacheMock.getUser(anyString())).thenReturn(USER);
+        when(usersCacheMock.getUser(anyString())).thenReturn(null);
     }
 
     private void endpointSuccess() {
@@ -236,47 +223,45 @@ public class FetchUserUseCaseSyncTestRef {
     }
 
     private void endpointAuthError() {
-        mFetchUserHttpEndpointSyncTestDouble.mAuthError = true;
+        fetchUserHttpEndpointSyncTd.authError = true;
     }
 
     private void endpointServerError() {
-        mFetchUserHttpEndpointSyncTestDouble.mServerError = true;
+        fetchUserHttpEndpointSyncTd.serverError = true;
     }
 
     private void endpointNetworkError() {
-        mFetchUserHttpEndpointSyncTestDouble.mNetworkError = true;
+        fetchUserHttpEndpointSyncTd.networkError = true;
     }
 
-    // endregion helper methods --------------------------------------------------------------------
+    private void userInCache() {
+        when(usersCacheMock.getUser(anyString())).thenReturn(USER);
+    }
+    // endregion helper methods
 
+    // region helper classes
+    private class FetchUserHttpEndpointSyncTd implements FetchUserHttpEndpointSync {
 
-    // region helper classes -----------------------------------------------------------------------
-
-    private class FetchUserHttpEndpointSyncTestDouble implements FetchUserHttpEndpointSync {
-
-        private int mRequestCount;
-        private String mUserId = "";
-        public boolean mAuthError;
-        public boolean mServerError;
-        public boolean mNetworkError;
+        public int requestCount;
+        private String userId = "";
+        private boolean authError;
+        public boolean serverError;
+        public boolean networkError;
 
         @Override
         public EndpointResult fetchUserSync(String userId) throws NetworkErrorException {
-            mRequestCount ++;
-            mUserId = userId;
+            requestCount ++;
+            this.userId = userId;
 
-            if (mAuthError) {
+            if (authError)
                 return new EndpointResult(EndpointStatus.AUTH_ERROR, "", "");
-            } else if (mServerError) {
+            else if (serverError)
                 return new EndpointResult(EndpointStatus.GENERAL_ERROR, "", "");
-            } else if (mNetworkError) {
+            else if (networkError)
                 throw new NetworkErrorException();
-            } else {
-                return new EndpointResult(EndpointStatus.SUCCESS, USER_ID, USERNAME);
-            }
+            else
+                return new EndpointResult(EndpointStatus.SUCCESS, USER_ID, USER_NAME);
         }
     }
-
-    // endregion helper classes --------------------------------------------------------------------
-
+    // endregion helper classes
 }

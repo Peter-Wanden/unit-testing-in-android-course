@@ -42,4 +42,13 @@ public class QuestionDetails {
     public int hashCode() {
         return Objects.hash(mId, mTitle, mBody);
     }
+
+    @Override
+    public String toString() {
+        return "QuestionDetails{" +
+                "mId='" + mId + '\'' +
+                ", mTitle='" + mTitle + '\'' +
+                ", mBody='" + mBody + '\'' +
+                '}';
+    }
 }

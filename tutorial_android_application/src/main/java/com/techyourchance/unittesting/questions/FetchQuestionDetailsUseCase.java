@@ -13,7 +13,10 @@ public class FetchQuestionDetailsUseCase extends BaseObservable<FetchQuestionDet
     }
 
     private final FetchQuestionDetailsEndpoint mFetchQuestionDetailsEndpoint;
+    private final long CACHE_TIMEOUT_MS = 60000;
     private final TimeProvider mTimeProvider;
+    private QuestionSchema questionSchemaCache;
+    private long lastCachedTimestamp;
 
     public FetchQuestionDetailsUseCase(FetchQuestionDetailsEndpoint fetchQuestionDetailsEndpoint,
                                        TimeProvider timeProvider) {
@@ -22,18 +25,35 @@ public class FetchQuestionDetailsUseCase extends BaseObservable<FetchQuestionDet
     }
 
     public void fetchQuestionDetailsAndNotify(String questionId) {
-        mFetchQuestionDetailsEndpoint.fetchQuestionDetails(questionId, new FetchQuestionDetailsEndpoint.Listener() {
-            @Override
-            public void onQuestionDetailsFetched(QuestionSchema question) {
-                notifySuccess(question);
 
-            }
+        if (isCachedDataValid() && isSameQuestionId(questionId)) {
+            notifySuccess(questionSchemaCache);
 
-            @Override
-            public void onQuestionDetailsFetchFailed() {
-                notifyFailure();
-            }
-        });
+        } else {
+            mFetchQuestionDetailsEndpoint.fetchQuestionDetails(
+                    questionId,
+                    new FetchQuestionDetailsEndpoint.Listener() {
+                        @Override
+                        public void onQuestionDetailsFetched(QuestionSchema question) {
+                            questionSchemaCache = question;
+                            notifySuccess(question);
+                        }
+
+                        @Override
+                        public void onQuestionDetailsFetchFailed() {
+                            notifyFailure();
+                        }
+                    });
+        }
+    }
+
+    private boolean isCachedDataValid() {
+        return questionSchemaCache !=null &&
+                mTimeProvider.getCurrentTimestamp() < lastCachedTimestamp + CACHE_TIMEOUT_MS;
+    }
+
+    private boolean isSameQuestionId(String questionId) {
+        return questionId.equals(questionSchemaCache.getId());
     }
 
     private void notifyFailure() {
@@ -43,6 +63,7 @@ public class FetchQuestionDetailsUseCase extends BaseObservable<FetchQuestionDet
     }
 
     private void notifySuccess(QuestionSchema questionSchema) {
+        lastCachedTimestamp = mTimeProvider.getCurrentTimestamp();
         for (Listener listener : getListeners()) {
             listener.onQuestionDetailsFetched(
                     new QuestionDetails(
